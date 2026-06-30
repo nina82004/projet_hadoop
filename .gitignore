@@ -1,0 +1,22 @@
+# Datasets
+datasets/
+*.csv
+*.parquet
+unified_dataset.parquet
+unified_dataset_scala.parquet
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Scala / SBT
+NetworkIntrusionSpark/target/
+NetworkIntrusionSpark/project/target/
+NetworkIntrusionSpark/.bsp/
+.bsp/
+.scala-build/
+*.class
+
+# macOS
+.DS_Store
