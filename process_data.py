@@ -13,7 +13,7 @@ def main():
     output_path = "unified_dataset.parquet"
     
     print(f"Chargement des fichiers CSV depuis {dataset_dir}...")
-    # Lire tous les fichiers CSV dans le dossier
+    # on lit tt les fichiers csv dans le dossier puis création un DataFrame unique
     df = spark.read.csv(f"{dataset_dir}/*.csv", header=True, inferSchema=True)
     
     print("--- Statistiques Descriptives Basiques ---")
@@ -21,7 +21,6 @@ def main():
     print(f"Nombre total de lignes : {total_count}")
     print(f"Nombre de colonnes : {len(df.columns)}")
     
-    # Nettoyage basique des noms de colonnes (espaces au début/fin)
     print("Nettoyage des noms de colonnes...")
     for col_name in df.columns:
         df = df.withColumnRenamed(col_name, col_name.strip())
@@ -30,7 +29,7 @@ def main():
     df.groupBy("Label").count().orderBy("count", ascending=False).show(truncate=False)
     
     print("\nRecherche de valeurs manquantes (NaN ou Null) dans quelques colonnes clés...")
-    # Checking for missing values in a few columns to avoid massive output
+    # recherche de valeurs manquantes
     cols_to_check = df.columns[:5] + ["Label"]
     df.select([count(when(col(c).isNull(), c)).alias(c) for c in cols_to_check]).show()
 
