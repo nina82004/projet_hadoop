@@ -1,0 +1,94 @@
+==================================================================
+   GUIDE DE DEMO - Projet Hadoop (Detection d'intrusions CIC-IDS-2017)
+   A executer dans le terminal WSL Ubuntu, de zero, devant le prof
+==================================================================
+
+------------------------------------------------------------------
+ETAPE 1 - DEMARRER HADOOP
+------------------------------------------------------------------
+start-dfs.sh
+    -> Demarre HDFS (stockage : NameNode + DataNode)
+
+start-yarn.sh
+    -> Demarre YARN (calcul : ResourceManager + NodeManager)
+
+jps
+    -> Verifie que tout tourne. On doit voir 5 services :
+       NameNode, DataNode, SecondaryNameNode,
+       ResourceManager, NodeManager
+    (Pas besoin de "sudo service ssh start" : SSH marche deja.)
+
+
+------------------------------------------------------------------
+ETAPE 2 - MONTRER LES DONNEES SUR HDFS
+------------------------------------------------------------------
+hdfs dfs -ls -h /user/projet/cicids2017
+    -> Affiche les 8 fichiers CSV stockes dans HDFS
+    (A montrer aussi dans Chrome : http://localhost:9870)
+
+
+------------------------------------------------------------------
+ETAPE 3 - SE PLACER DANS LE PROJET + ACTIVER L'ENVIRONNEMENT
+------------------------------------------------------------------
+cd /mnt/c/Users/thini/Desktop/projet_hadoop
+    -> Va dans le dossier du projet
+
+source ~/projet/venv/bin/activate
+    -> Active l'environnement Python (pyspark, jupyter...)
+       L'invite affiche alors (venv)
+
+
+------------------------------------------------------------------
+ETAPE 4 - LANCER LE TRAITEMENT + NETTOYAGE  (~10 min)
+------------------------------------------------------------------
+spark-submit --driver-memory 4g process_data.py
+    -> Lit les CSV depuis HDFS, fusionne, nettoie
+       (colonnes constantes/redondantes, doublons, valeurs invalides)
+       et ecrit unified_dataset.parquet + cleaned_dataset.parquet sur HDFS
+    (A montrer pendant : http://localhost:8088 = YARN)
+
+hdfs dfs -ls -h /user/projet/cleaned_dataset.parquet
+    -> Verifie que le dataset nettoye a bien ete cree
+       (fichier _SUCCESS + fichiers part-*.parquet)
+
+
+------------------------------------------------------------------
+ETAPE 5 (OPTIONNEL) - ENTRAINER LE MODELE
+------------------------------------------------------------------
+spark-submit --driver-memory 4g train_model.py
+    -> Entraine le Random Forest sur les donnees nettoyees
+       -> affiche Accuracy et F1-Score
+
+
+------------------------------------------------------------------
+ETAPE 6 - LANCER LE NOTEBOOK D'ANALYSE
+------------------------------------------------------------------
+jupyter lab --no-browser
+    -> Demarre JupyterLab.
+       Copier l'URL affichee : http://localhost:8888/lab?token=...
+       La coller dans Chrome
+       Ouvrir analyse_resultats.ipynb
+       Menu Run -> Run All Cells  (regenere les graphiques)
+
+
+==================================================================
+   LES 3 URLs A MONTRER DANS CHROME
+==================================================================
+http://localhost:9870   -> HDFS   : les fichiers stockes
+http://localhost:8088   -> YARN   : le job Spark qui tourne
+http://localhost:8888   -> Jupyter: le notebook + graphiques
+
+
+==================================================================
+   CONSEIL
+==================================================================
+- L'etape 4 prend ~10 min : la lancer AVANT l'arrivee du prof,
+  ou la montrer demarrer 1 min puis passer au notebook avec les
+  resultats deja calcules.
+
+- Relancer "spark-submit process_data.py" ECRASE (mode overwrite)
+  le nettoyage precedent et le recalcule a l'identique. Rien ne
+  s'accumule, aucun doublon.
+
+- Si jps ne montre pas 5 services -> refaire start-dfs.sh puis start-yarn.sh
+==================================================================

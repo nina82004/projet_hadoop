@@ -46,7 +46,7 @@ def main():
     df.select([count(when(col(c).isNull(), c)).alias(c) for c in cols_to_check]).show()
 
     print(f"\nSauvegarde du dataset unifié BRUT au format Parquet dans {args.output}...")
-    df.write.mode("overwrite").parquet(args.output)
+    df.repartition(10).write.mode("overwrite").parquet(args.output)
 
     # =========================================================
     #                    NETTOYAGE DU DATASET
