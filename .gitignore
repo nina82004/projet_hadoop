@@ -10,6 +10,12 @@ venv/
 __pycache__/
 *.pyc
 
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+
 # Scala / SBT
 NetworkIntrusionSpark/target/
 NetworkIntrusionSpark/project/target/

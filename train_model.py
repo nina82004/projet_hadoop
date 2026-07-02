@@ -1,4 +1,4 @@
-import os
+import argparse
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, when, isnan
 from pyspark.ml.feature import StringIndexer, VectorAssembler, StandardScaler
@@ -7,27 +7,24 @@ from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.ml import Pipeline
 
 def main():
+    # Le Parquet unifié est lu depuis HDFS (produit par process_data.py)
+    parser = argparse.ArgumentParser(description="Entraînement RandomForest sur les données CIC-IDS-2017")
+    parser.add_argument("--input", default="hdfs:///user/projet/cleaned_dataset.parquet",
+                        help="Chemin HDFS du Parquet nettoyé (produit par process_data.py)")
+    args = parser.parse_args()
+
     print("Initialisation de SparkSession pour l'entraînement ML...")
     spark = SparkSession.builder \
         .appName("Network Intrusion ML - RandomForest") \
         .config("spark.driver.memory", "4g") \
         .getOrCreate()
+
+    print(f"Chargement des données depuis {args.input}...")
+    df = spark.read.parquet(args.input)
     
-    input_path = "unified_dataset.parquet"
-    
-    print(f"Chargement des données depuis {input_path}...")
-    df = spark.read.parquet(input_path)
-    
-    # 1. Nettoyage des données
     print("Nettoyage des données (suppression des valeurs manquantes/infinies)...")
-    # Pour simplifier, on supprime les lignes ayant des valeurs manquantes dans cette ébauche
     df_clean = df.dropna()
     
-    # Beaucoup de datasets réseau ont des valeurs infinies dans Flow Bytes/s et Flow Packets/s
-    # On va les filtrer s'il y en a. En PySpark, Infinity peut être traité.
-    # Dans ce script simple, on suppose que `dropna` fait le gros du travail.
-    
-    # Pour un premier test rapide, prenons un échantillon de 10% (car 2.8M de lignes peut être long localement)
     print("Échantillonnage à 10% pour un entraînement rapide (à modifier pour le modèle final)...")
     df_sample = df_clean.sample(withReplacement=False, fraction=0.1, seed=42)
     

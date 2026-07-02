@@ -21,16 +21,21 @@ pip install pyspark pandas scikit-learn
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 ```
 
+Les données brutes sont stockées sur **HDFS** dans `/user/projet/cicids2017` (8 CSV, ~800 Mo).
+
 ### 2. Traitement des données
-Fusionne les CSV bruts depuis `datasets/` vers `unified_dataset.parquet`.
+Fusionne les CSV bruts depuis HDFS vers un Parquet unifié sur HDFS.
 ```bash
-python3 process_data.py
+spark-submit --driver-memory 4g process_data.py \
+  --input hdfs:///user/projet/cicids2017 \
+  --output hdfs:///user/projet/unified_dataset.parquet
 ```
 
 ### 3. Entraînement du modèle
-Entraîne un modèle Random Forest sur les données unifiées.
+Entraîne un modèle Random Forest sur les données unifiées lues depuis HDFS.
 ```bash
-python3 train_model.py
+spark-submit --driver-memory 4g train_model.py \
+  --input hdfs:///user/projet/unified_dataset.parquet
 ```
 
 ## Performances
